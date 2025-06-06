@@ -1,0 +1,10 @@
+---
+- name: Launch frontend container
+  docker_container:
+    name: tp_frontend
+    image: "{{ lookup('env', 'DOCKER_FRONTEND_IMAGE') }}"
+    networks:
+      - name: my_network
+    published_ports:
+      - "8081:80"
+    state: started

@@ -2,9 +2,9 @@ name: CD - Docker Build & Push
 
 on:
   workflow_run:
-    workflows: [ "CI devops 2025" ] # nom exact qui fait réfénce au workflow ci.yml
+    workflows: ["CI devops 2025"]
     types:
-    - completed
+      - completed
 
 jobs:
   build-and-push-docker-image:
@@ -29,6 +29,13 @@ jobs:
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-simple-api:latest
 
+    - name: Build image and push frontend
+      uses: docker/build-push-action@v6
+      with:
+        context: ./frontend/devops-front-main
+        push: true
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-frontend:latest
+
     - name: Build image and push database
       uses: docker/build-push-action@v6
       with:
@@ -42,3 +49,48 @@ jobs:
         context: ./http-server
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-httpd:latest
+
+  deploy:
+    needs: build-and-push-docker-image
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-24.04
+    environment: development
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup SSH Key
+      run: |
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/private_key.pem
+        chmod 600 /tmp/private_key.pem
+
+    - name: Install Ansible
+      run: |
+        sudo apt update
+        sudo apt install -y ansible
+
+    - name: Copy SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Run Ansible Playbook
+      run: |
+        cd ansible
+        ansible-playbook -i inventories/setup.yml deploy-playbook.yml
+      env:
+        ANSIBLE_REMOTE_USER: ${{ secrets.SSH_USER }}
+        ANSIBLE_PRIVATE_KEY_FILE: /tmp/private_key.pem
+        POSTGRES_USER: ${{ secrets.DB_USER }}
+        POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_VOLUME_PATH: ${{ secrets.DB_VOLUME_PATH }}
+        DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+        DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+        DATABASE_USERNAME: ${{ secrets.DB_USER }}
+        DATABASE_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DOCKER_FRONTEND_IMAGE: ${{ secrets.DOCKER_FRONTEND_IMAGE }}
+
+

@@ -1,0 +1,16 @@
+---
+- name: Launch database container
+  docker_container:
+    name: tp_database
+    pull: true
+    image: aminedocker2/tp-devops-database:latest
+    env:
+      POSTGRES_USER: "{{ lookup('env', 'POSTGRES_USER') }}"
+      POSTGRES_PASSWORD: "{{ lookup('env', 'POSTGRES_PASSWORD') }}"
+    networks:
+      - name: my_network
+    volumes:
+      - "{{ lookup('env', 'DB_VOLUME_PATH') }}:/var/lib/postgresql/data"
+    published_ports:
+      - "5432:5432"
+    state: started

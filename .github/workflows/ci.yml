@@ -27,3 +27,6 @@ jobs:
 
     - name: Check quality with Sonar
       run: mvn -B verify sonar:sonar -Dsonar.projectKey=${{ secrets.SONAR_PROJECTKEY }} -Dsonar.organization=${{ secrets.ORGANISATION }} -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} --file ./simple-api/pom.xml
+
+
+    #OWAPS, pourcentage

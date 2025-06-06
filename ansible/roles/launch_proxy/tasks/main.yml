@@ -1,0 +1,11 @@
+---
+- name: Launch proxy container
+  docker_container:
+    name: tp_proxy
+    pull: true
+    image: aminedocker2/tp-devops-httpd:latest
+    published_ports:
+      - "80:80"
+    networks:
+      - name: my_network
+    state: started

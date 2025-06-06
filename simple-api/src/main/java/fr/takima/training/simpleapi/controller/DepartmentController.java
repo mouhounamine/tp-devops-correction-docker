@@ -27,6 +27,12 @@ public class DepartmentController {
         return ResponseEntity.ok(departmentService.getDepartments());
     }
 
+    
+    @GetMapping("/test")
+    public ResponseEntity<Object> getDepartmentsTest() {
+        return ResponseEntity.ok(departmentService.getDepartments());
+    }
+
     @GetMapping("/{departmentName}/students")
     public ResponseEntity<Object> getDepartmentList(@PathVariable(name="departmentName") String name) {
         Optional<Department> optionalDepartment = Optional.ofNullable(this.departmentService.getDepartmentByName(name));
